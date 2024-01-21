@@ -1,0 +1,225 @@
+<html>
+
+<head>
+    <title>Virtual Reality Fantasi Abad Pertengahan</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://unpkg.com/aframe-orbit-controls@1.3.2/dist/aframe-orbit-controls.min.js"></script>
+  <script src="js/aframe-particle-system-component.min.js"></script>
+  <script src="js/aframe-environment-component.min.js"></script>
+  <script src="https://unpkg.com/aframe-state-component@7.1.1/dist/aframe-state-component.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@fb96ab2/dist/aframe-extras.min.js"></script>
+
+  <script>
+    window.AFRAME.registerState({
+      initialState: {
+        inVR: false,
+      },
+      handlers: {
+        setInVR: function (state, action) {
+          state.inVR = action.inVR;
+        },
+      },
+    });
+
+
+
+    AFRAME.registerComponent("spot", {
+      schema: {
+        model: { type: "string", default: "" },
+        name: { type: "string", default: "" },
+      },
+      init: function () {
+        console.log("init:");
+        //const cam = document.getElementById('cam');
+
+        var data = this.data;
+        this.el.addEventListener("click", function () {
+
+          //cam.setAttribute("orbit-controls", "position: 0 10 30");
+          //model.removeAttribute('gltf-model');
+          //setTimeout(function() {}, 1000);
+
+          //model.setAttribute("gltf-model", "#" + data.model);    
+          select_scene(data.model);
+        });
+        this.el.addEventListener("mouseleave", function () {
+          console.log("leave:" + data.model);
+          // if (!poi_open) {
+          //   var cur = document.getElementById("cursor-visual");
+          view_env_name("");
+          //   cur.emit("stopFuse");
+          // }
+        });
+        this.el.addEventListener("mouseenter", function () {
+          console.log("enter:" + data.model);
+          // var cur = document.getElementById("cursor-visual");
+          view_env_name(data.name);
+          // cur.emit("startFuse");
+        });
+      },
+    });
+
+
+    function view_env_name(name) {
+      var env_name = document.getElementById('env_name');
+      if (name !== '') {
+        env_name.setAttribute("value", name);
+      }
+      env_name.setAttribute("scale", "7 7 7");
+      env_name.emit('roomNameFadeIn');
+      setTimeout(function () {
+        env_name.emit('roomNameFadeOut');
+        setTimeout(function () {
+          env_name.setAttribute("scale", "0 0 0");
+        }, 400);
+      }, 3000);
+    }
+    function select_scene(model) {
+      console.log("select_" + model);
+      var thor_scene = document.getElementById('thor_scene');
+      var baba_scene = document.getElementById('baba_scene');
+      var dragon_scene = document.getElementById('dragon_scene');
+      if (model === 'thor') {
+        console.log("select_thor");
+        thor_scene.setAttribute("visible", "true");
+        baba_scene.setAttribute("visible", "false");
+        dragon_scene.setAttribute("visible", "false");
+      } else if (model === 'baba') {
+        console.log("select_baba");
+        thor_scene.setAttribute("visible", "false");
+        baba_scene.setAttribute("visible", "true");
+        dragon_scene.setAttribute("visible", "false");
+      } else if (model === 'dragon') {
+        console.log("select_dragon");
+        thor_scene.setAttribute("visible", "false");
+        baba_scene.setAttribute("visible", "false");
+        dragon_scene.setAttribute("visible", "true");
+      } else {
+        thor_scene.setAttribute("visible", "false");
+        baba_scene.setAttribute("visible", "false");
+        baba_scene.setAttribute("visible", "false");
+      }
+
+    }
+
+    //should be attached to scene entity, updating the inVR state
+    AFRAME.registerComponent("change-vr-mode-listener", {
+      init: function () {
+        this.el.addEventListener("enter-vr", function (evt) {
+          console.log("entering vr");
+          // inVR is true if device is connected. Otherwise just fullscreen desktop mode.
+          AFRAME.scenes[0].emit("setInVR", {
+            inVR: AFRAME.utils.device.checkHeadsetConnected(),
+          });
+        });
+        this.el.addEventListener("exit-vr", function (evt) {
+          console.log("exiting vr");
+          AFRAME.scenes[0].emit("setInVR", { inVR: false });
+        });
+      },
+    });
+  </script>
+
+</head>
+
+<body>
+  <a-scene change-vr-mode-listener background="color: #333">
+
+    <a-mixin id="rotation"
+      animation="property: rotation; loop: true; from:  0 0 0; to: 0 360 0; dur: 50000; easing: linear;"></a-mixin>
+
+    <a-text negate="false" id="env_name" value="Fantasi Abad Pertengahan" color="white" align="center" position="0 20 30"
+      scale="7 7 7" opacity="0" animation__fadein="property:opacity;to:1;dur:400;startEvents:roomNameFadeIn"
+      animation__fadeout="property:opacity;to:0;dur:400;startEvents:roomNameFadeOut" text=""></a-text>
+
+    <a-entity id="thor_scene" visible="true">
+      <a-sky width="2048" height="2048"
+        material="shader: flat; src: https://raw.githubusercontent.com/german-alvarez-dev/workshop-webvr-aframe/master/textures/sky.jpg"
+        radius="150" theta-length="90" crossorigin="anonymous" ></a-sky>
+
+      <a-entity position="0 2.25 -15" particle-system="preset: rain;"></a-entity>
+
+      <a-ocean density="200" width="300" depth="250" speed="3" material="color: #9CE3F9; opacity: 0.7; metalness: 0;"
+        rotation="-90 0 0" position="0 .8 0"></a-ocean>
+
+      <a-entity position="0 0 70" light="type: point; color: white; intensity: 2"></a-entity>
+
+      <a-entity light="type: ambient; color: #555"></a-entity>
+
+      <a-gltf-model src="./assets/thor_and_the_midgard_serpent/thor_and_the_midgard_serpent.gltf" position="0 0 -20"
+        scale="5 5 5"  crossorigin="anonymous" animation-mixer></a-gltf-model>
+
+    </a-entity>
+
+
+    <a-entity id="baba_scene" visible="false" >
+        
+      <a-sky width="2048" height="2048" color="#6EBAA7"
+        radius="300" theta-length="90"></a-sky>
+
+      <a-entity position="0 2.25 -15" particle-system="preset: rain;"></a-entity>
+
+
+
+      <a-entity position="0 0 70" light="type: point; color: white; intensity: 2"></a-entity>
+
+      <a-entity light="type: ambient; color: #6EBAA7"></a-entity>
+
+      <a-gltf-model src="./assets/baba_yagas_hut/baba_yagas_hut.gltf" position="0 0 -20" rotation="0 45 0" scale="2 2 2"
+      crossorigin="anonymous" animation-mixer></a-gltf-model>
+
+    </a-entity>
+
+
+    <a-entity id="dragon_scene" visible="false">
+      
+
+      <a-entity position="0 2.25 -15" particle-system="preset: rain;"></a-entity>
+
+
+
+      <a-entity position="0 50 70" light="type: point; color: white; intensity: 2"></a-entity>
+
+      <a-entity light="type: ambient; color: #555"></a-entity>
+
+      <a-gltf-model src="./assets/wrath_of_the_dragon/wrath_of_the_dragon.gltf" position="0 0 -20" rotation="0 45 0"
+        scale="1 1 1"  crossorigin="anonymous" animation-mixer></a-gltf-model>
+
+    </a-entity>
+
+<a-assets>
+    <img id="thumbBaba" crossorigin="anonymous" src="./assets/baba-yaga.jpg">
+    </a-assets>
+    
+    
+    <a-sphere id="baba-sphere" position="-15 5 30" radius="3" src="assets/baba-yaga.jpg"
+      shadow="cast: true;receive: true" spot="model:baba;name:Baba Yagas Hut\noleh Inuciian - Sketchfab;" mixin="rotation" crossorigin="anonymous" ></a-sphere>
+
+    <a-sphere id="thor-sphere" position="0 5 30" radius="3" src="assets/thor-min.png"
+      shadow="cast: true;receive: true" spot="model:thor;name:Thor And The Midgard Serpent\noleh MrEmjeR - Sketchfab
+
+;"
+      mixin="rotation" crossorigin="anonymous" ></a-sphere>
+
+
+
+    <a-sphere id="dragon-sphere" position="15 5 30" radius="3" src="assets/dragon-min.png"
+      shadow="cast: true;receive: true" spot="model:dragon;name:Wrath Of The Dragon\noleh Fabian Orrego - Sketchfab;" mixin="rotation" crossorigin="anonymous" ></a-sphere>
+      <!--
+      <a-link spot="model:dragon;name:Wrath Of The Dragon\nby Fabian Orrego on Sketchfab;"
+            position="-15 25 -10" scale="3 3 3" image="#thumbBaba" geometry="" material="" link=""></a-link>
+            -->
+
+    <a-entity id="cameraRig" movement-controls bind__position="inVR && '0 5 -11' || '0 0 0'"
+      bind__rotation="inVR && '0 90 0' || '0 0 0'">
+      <a-entity id="cam" camera look-controls cursor="rayOrigin: mouse"
+        orbit-controls="minDistance: 0.5; maxDistance: 100; initialPosition: 0 20 50; screenSpacePanning: true;">
+      </a-entity>
+      <a-entity id="leftHand" hand-controls="hand: left"> </a-entity>
+      <a-entity id="rightHand" hand-controls="hand: right"></a-entity>
+    </a-entity>
+
+  </a-scene>
+</body>
+
+</html>
